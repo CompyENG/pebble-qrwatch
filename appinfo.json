@@ -1,0 +1,17 @@
+{
+  "uuid": "dda8228f-4a56-438f-9617-84bbe53b081b",
+  "shortName": "qrwatch",
+  "longName": "qrwatch",
+  "companyName": "TrueJournals",
+  "versionCode": 1,
+  "versionLabel": "1.0.0",
+  "watchapp": {
+    "watchface": true
+  },
+  "appKeys": {
+    "dummy": 0
+  },
+  "resources": {
+    "media": []
+  }
+}
