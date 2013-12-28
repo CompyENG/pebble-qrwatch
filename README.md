@@ -10,3 +10,5 @@ QR library is from https://github.com/ksasq/QR-Image-embedded
 
 The QR code contains the time and date (separated by a line break) and is
 displayed centered on the Pebble's display.
+
+![Screenshot](/pebble-screenshot_2013-12-28_17-34-34.png "Screenshot")
