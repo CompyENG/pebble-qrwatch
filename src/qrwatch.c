@@ -3,10 +3,17 @@
 
 static Window *window;
 static Layer *qr_layer;
+static TextLayer *time_layer = NULL;
+static char time_str[6];
 static char qr_str[15];
 static int qr_width;
 
+// TODO: Have this caluclated from font somehow, instead of hardcoding width and height?
+#define TIME_SIZE_BLOCKS_W 6
+#define TIME_SIZE_BLOCKS_H 3
+
 void qr_draw(Layer *layer, GContext* ctx) {
+	if(qr_width == 0) return;
 	int byte = 0;
 	int bit = 7;
 
@@ -28,6 +35,32 @@ void qr_draw(Layer *layer, GContext* ctx) {
 				graphics_fill_rect(ctx, (GRect){.origin={padding_x+x*block_size, padding_y+y*block_size}, .size={block_size, block_size}}, 0, GCornerNone);
 		}
 	}
+
+	if(time_layer == NULL) {
+		// time_layer is created here so we know the bounds of the QR code.  This way, we don't have to rely
+		//  on the QR code always being the same size
+
+		// The time will take up the last 6x3 blocks in the lower-right corner of the QR code.
+		GRect time_position = {
+				.origin = {
+						layer_size.size.w - padding_x - (block_size * TIME_SIZE_BLOCKS_W),
+						layer_size.size.h - padding_y - (block_size * TIME_SIZE_BLOCKS_H)
+				},
+				.size = {
+						block_size * TIME_SIZE_BLOCKS_W,
+						block_size * TIME_SIZE_BLOCKS_H
+				}
+		};
+		time_layer = text_layer_create(time_position);
+		text_layer_set_text_alignment(time_layer, GTextAlignmentRight);
+		text_layer_set_overflow_mode(time_layer, GTextOverflowModeFill);
+		text_layer_set_font(time_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+		layer_add_child(layer, text_layer_get_layer(time_layer));
+	}
+
+	// TODO: Optionally hide time, showing only QR code?
+	text_layer_set_text(time_layer, time_str);
+	layer_mark_dirty(text_layer_get_layer(time_layer));
 }
 
 static void window_load(Window *window) {
@@ -37,15 +70,18 @@ static void window_load(Window *window) {
   qr_layer = layer_create_with_data((GRect) { .origin = {0, 0}, .size = {bounds.size.w, bounds.size.h} }, MAX_BITDATA);
   layer_set_update_proc(qr_layer, qr_draw);
   layer_add_child(window_layer, qr_layer);
+
+//  time_layer = text_layer_create((GRect) { .origin = {bounds.size.w/2 - 20, bounds.size.h/2 - 20}, .size = {30, 20}});
+//  layer_add_child(window_layer, text_layer_get_layer(time_layer));
 }
 
 static void window_unload(Window *window) {
 	layer_destroy(qr_layer);
+	text_layer_destroy(time_layer);
 }
 
 static void update_time(struct tm *tick_time, TimeUnits units_changed) {
 	unsigned char* data = layer_get_data(qr_layer);
-	char time_str[6];
 	clock_copy_time_string(time_str, 6);
 	char date_str[10];
 	strftime(date_str, 10, "\n%D", tick_time);
